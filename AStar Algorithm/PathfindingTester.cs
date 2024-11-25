@@ -14,7 +14,7 @@ public class PathfindingTester : MonoBehaviour
     private List<Vector3> pathPoints = new List<Vector3>();
     private int currentWaypointIndex = 0;
     private float distanceThreshold = 0.1f;
-
+    private bool isReturning = false;
 
     void Start()
     {
@@ -55,7 +55,7 @@ public class PathfindingTester : MonoBehaviour
         // Find path using A*.
         ConnectionArray = AStarManager.PathfindAStar(start, end);
 
-        // Reset path points and populate them.
+        // Shortest path in the array
         foreach (Connection aConnection in ConnectionArray)
         {
             pathPoints.Add(aConnection.GetFromNode().transform.position + OffSet);
@@ -71,20 +71,18 @@ public class PathfindingTester : MonoBehaviour
         if (pathPoints.Count == 0 || currentWaypointIndex >= pathPoints.Count)
             return;
 
-
-        // Move the car along the path
+        // Determine the target waypoint
         Vector3 targetWaypoint = pathPoints[currentWaypointIndex];
-
-        // for rotation
         Vector3 direction = (targetWaypoint - transform.position).normalized;
 
+        // Rotate toward the target
         if (direction != Vector3.zero)
         {
             Quaternion targetRotation = Quaternion.LookRotation(direction);
             transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, moveSpeed * Time.deltaTime);
         }
 
-        // move the car toward the next waypoint in the array
+        // Move toward the target waypoint
         transform.position = Vector3.MoveTowards(transform.position, targetWaypoint, moveSpeed * Time.deltaTime);
 
         // If the car has reached the current waypoint
@@ -92,15 +90,23 @@ public class PathfindingTester : MonoBehaviour
         {
             currentWaypointIndex++;
 
-            // Check if we reached the final point in the reversed path (which is the start)
-            if (currentWaypointIndex == pathPoints.Count)
+            // Handle end of forward journey
+            if (!isReturning && currentWaypointIndex == pathPoints.Count)
             {
-                // Finished the return journey
-                Debug.Log("Returning to the home");
+                Debug.Log("Reached the destination. Returning to the start.");
+                isReturning = true;
+
+                // Reverse the path once and reset the index
+                pathPoints.Reverse();
+                currentWaypointIndex = 0;
+            }
+            // Handle end of return journey
+            else if (isReturning && currentWaypointIndex == pathPoints.Count)
+            {
+                Debug.Log("Returned to the start. Journey complete.");
+                enabled = false;
             }
         }
-
-
     }
 
 }
