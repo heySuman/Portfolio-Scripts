@@ -65,6 +65,17 @@ public class PathfindingTester : MonoBehaviour
         pathPoints.Add(end.transform.position + OffSet);
     }
 
+    void OnDrawGizmos()
+    {
+        // Draw path.
+        foreach (Connection aConnection in ConnectionArray)
+        {
+            Gizmos.color = Color.white;
+            Gizmos.DrawLine((aConnection.GetFromNode().transform.position + OffSet),
+            (aConnection.GetToNode().transform.position + OffSet));
+        }
+    }
+
     void Update()
     {
         // If there are no path points or we've reached the end of the path, stop
@@ -96,7 +107,6 @@ public class PathfindingTester : MonoBehaviour
                 Debug.Log("Reached the destination. Returning to the start.");
                 isReturning = true;
 
-                // Reverse the path once and reset the index
                 pathPoints.Reverse();
                 currentWaypointIndex = 0;
             }
