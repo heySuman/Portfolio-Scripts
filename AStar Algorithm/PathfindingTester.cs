@@ -1,15 +1,22 @@
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class PathfindingTester : MonoBehaviour
 {
-    public float moveSpeed = 20f;
+    public float baseSpeed = 20f;
+    public float moveSpeed;
+    public TextMeshProUGUI speedInfoText;
     private AStarManager AStarManager = new AStarManager();
     private List<GameObject> Waypoints = new List<GameObject>();
     private List<Connection> ConnectionArray = new List<Connection>();
     public GameObject start;
-    private GameObject end;
+    public GameObject end;
+    public GameObject parcelPrefab;
+    public int parcelCount;
+    public static int parcelCollected = 0;
     private Vector3 OffSet = new Vector3(0, 0.3f, 0);
     private List<Vector3> pathPoints = new List<Vector3>();
     private int currentWaypointIndex = 0;
@@ -18,9 +25,16 @@ public class PathfindingTester : MonoBehaviour
 
     void Start()
     {
+        // Calculate speed based on parcel count
+        moveSpeed = baseSpeed;
+        
         // Get the parcel's end node.
-        end = GenerateParcel.GetEndNode();
         transform.position = start.transform.position;
+
+        for (int i = 0; i < parcelCount; i++)
+        {
+            Instantiate(parcelPrefab, end.transform.position, end.transform.rotation);
+        }
 
         if (start == null || end == null)
         {
@@ -71,8 +85,8 @@ public class PathfindingTester : MonoBehaviour
         foreach (Connection aConnection in ConnectionArray)
         {
             Gizmos.color = Color.white;
-            Gizmos.DrawLine((aConnection.GetFromNode().transform.position + OffSet),
-            (aConnection.GetToNode().transform.position + OffSet));
+            Gizmos.DrawLine(aConnection.GetFromNode().transform.position + OffSet,
+            aConnection.GetToNode().transform.position + OffSet);
         }
     }
 
@@ -90,7 +104,7 @@ public class PathfindingTester : MonoBehaviour
         if (direction != Vector3.zero)
         {
             Quaternion targetRotation = Quaternion.LookRotation(direction);
-            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, moveSpeed * Time.deltaTime);
+            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, moveSpeed * Time.deltaTime / 2f);
         }
 
         // Move toward the target waypoint
@@ -117,6 +131,10 @@ public class PathfindingTester : MonoBehaviour
                 enabled = false;
             }
         }
+    }
+
+    public static void  SetCollected(){
+        parcelCollected ++;
     }
 
 }

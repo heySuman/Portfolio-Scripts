@@ -12,6 +12,5 @@ public class ParcelInfo : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        parcelInfo.text ="Parcel on node:" + GenerateParcel.GetEndNode().name +"\nCollection Status: " + (ParcelCollision.GetCollectionStatus() ? "Completed" : "Pending");
     }
 }
