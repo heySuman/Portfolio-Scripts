@@ -16,7 +16,6 @@ public class PathfindingTester : MonoBehaviour
     public GameObject end;
     public GameObject parcelPrefab;
     public int parcelCount;
-    public static int parcelCollected = 0;
     private Vector3 OffSet = new Vector3(0, 0.3f, 0);
     private List<Vector3> pathPoints = new List<Vector3>();
     private int currentWaypointIndex = 0;
@@ -33,7 +32,7 @@ public class PathfindingTester : MonoBehaviour
 
         for (int i = 0; i < parcelCount; i++)
         {
-            Instantiate(parcelPrefab, end.transform.position, end.transform.rotation);
+            ParcelGenerator.GenerateParcel(parcelPrefab, end);
         }
 
         if (start == null || end == null)
@@ -131,10 +130,6 @@ public class PathfindingTester : MonoBehaviour
                 enabled = false;
             }
         }
-    }
-
-    public static void  SetCollected(){
-        parcelCollected ++;
     }
 
 }
