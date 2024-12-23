@@ -1,7 +1,5 @@
-using System.Collections;
 using System.Collections.Generic;
 using TMPro;
-using Unity.VisualScripting;
 using UnityEngine;
 
 public class PathfindingTester : MonoBehaviour
@@ -21,11 +19,13 @@ public class PathfindingTester : MonoBehaviour
     private int currentWaypointIndex = 0;
     private float distanceThreshold = 0.1f;
     private bool isReturning = false;
+     private string agentTag;
 
     void Start()
     {
         // Calculate speed based on parcel count
         moveSpeed = baseSpeed;
+        agentTag = gameObject.tag;
         
         // Get the parcel's end node.
         transform.position = start.transform.position;
@@ -108,6 +108,12 @@ public class PathfindingTester : MonoBehaviour
 
         // Move toward the target waypoint
         transform.position = Vector3.MoveTowards(transform.position, targetWaypoint, moveSpeed * Time.deltaTime);
+
+        // update the speed based on the parcel collection number
+        int collectedCount = CollisionInfo.GetCollectedCount(agentTag);
+        moveSpeed = baseSpeed * Mathf.Pow(0.9f, collectedCount);
+
+        speedInfoText.text = $"Speed: {moveSpeed:F2}";
 
         // If the car has reached the current waypoint
         if (Vector3.Distance(transform.position, targetWaypoint) < distanceThreshold)
