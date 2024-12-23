@@ -5,8 +5,21 @@ using UnityEngine;
 public class PathfindingTester : MonoBehaviour
 {
     public float baseSpeed = 20f;
-    public float moveSpeed;
+    private float moveSpeed;
+    public bool isStopped = false;
+
+    public float MoveSpeed
+    {
+        get => isStopped ? 0 : moveSpeed;
+        set
+        {
+            moveSpeed = value;
+            if (value == 0) isStopped = true;
+        }
+    }
+
     public TextMeshProUGUI speedInfoText;
+    public TextMeshProUGUI parcelToCollectInfo;
     private AStarManager AStarManager = new AStarManager();
     private List<GameObject> Waypoints = new List<GameObject>();
     private List<Connection> ConnectionArray = new List<Connection>();
@@ -19,16 +32,16 @@ public class PathfindingTester : MonoBehaviour
     private int currentWaypointIndex = 0;
     private float distanceThreshold = 0.1f;
     private bool isReturning = false;
-     private string agentTag;
+    private string agentTag;
 
     void Start()
     {
-        // Calculate speed based on parcel count
-        moveSpeed = baseSpeed;
+        MoveSpeed = baseSpeed;
         agentTag = gameObject.tag;
-        
-        // Get the parcel's end node.
+
         transform.position = start.transform.position;
+
+        parcelToCollectInfo.text = $"Total Parcel to Collect: {parcelCount}";
 
         for (int i = 0; i < parcelCount; i++)
         {
@@ -91,11 +104,16 @@ public class PathfindingTester : MonoBehaviour
 
     void Update()
     {
-        // If there are no path points or we've reached the end of the path, stop
+        if (isStopped)
+        {
+            // When the agent is stopped, set speed to 0 and display "Speed: 0"
+            speedInfoText.text = "Speed: 0";
+            return; 
+        }
+
         if (pathPoints.Count == 0 || currentWaypointIndex >= pathPoints.Count)
             return;
 
-        // Determine the target waypoint
         Vector3 targetWaypoint = pathPoints[currentWaypointIndex];
         Vector3 direction = (targetWaypoint - transform.position).normalized;
 
@@ -103,39 +121,46 @@ public class PathfindingTester : MonoBehaviour
         if (direction != Vector3.zero)
         {
             Quaternion targetRotation = Quaternion.LookRotation(direction);
-            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, moveSpeed * Time.deltaTime / 2f);
+            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, MoveSpeed * Time.deltaTime / 2f);
         }
 
         // Move toward the target waypoint
-        transform.position = Vector3.MoveTowards(transform.position, targetWaypoint, moveSpeed * Time.deltaTime);
+        transform.position = Vector3.MoveTowards(transform.position, targetWaypoint, MoveSpeed * Time.deltaTime);
 
-        // update the speed based on the parcel collection number
+        // Update speed based on parcel collection
         int collectedCount = CollisionInfo.GetCollectedCount(agentTag);
-        moveSpeed = baseSpeed * Mathf.Pow(0.9f, collectedCount);
+        MoveSpeed = baseSpeed * Mathf.Pow(0.9f, collectedCount);
 
-        speedInfoText.text = $"Speed: {moveSpeed:F2}";
+        // Ensure speed doesn't go below a certain threshold (e.g., 1 unit)
+        MoveSpeed = Mathf.Max(MoveSpeed, 1f);
 
-        // If the car has reached the current waypoint
+        // Update the speed UI text
+        speedInfoText.text = $"Speed: {MoveSpeed:F2}";
+
+        // If the agent has reached the current waypoint
         if (Vector3.Distance(transform.position, targetWaypoint) < distanceThreshold)
         {
             currentWaypointIndex++;
 
-            // Handle end of forward journey
             if (!isReturning && currentWaypointIndex == pathPoints.Count)
             {
                 Debug.Log("Reached the destination. Returning to the start.");
                 isReturning = true;
-
                 pathPoints.Reverse();
                 currentWaypointIndex = 0;
             }
-            // Handle end of return journey
             else if (isReturning && currentWaypointIndex == pathPoints.Count)
             {
                 Debug.Log("Returned to the start. Journey complete.");
                 enabled = false;
+                speedInfoText.text = "Speed: 0";
             }
         }
     }
 
+    public void ResumeAgent()
+    {
+        isStopped = false;
+        MoveSpeed = baseSpeed;
+    }
 }

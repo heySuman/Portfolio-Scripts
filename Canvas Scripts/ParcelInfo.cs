@@ -1,9 +1,5 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
-using System;
-using UnityEngine.Assertions.Must;
 
 public class ParcelInfo : MonoBehaviour
 {
@@ -12,5 +8,6 @@ public class ParcelInfo : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        
     }
 }
